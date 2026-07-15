@@ -6,7 +6,7 @@ import math
 import functools
 
 from scipy import stats
-from scipy.ndimage.filters import maximum_filter
+from scipy.ndimage import maximum_filter
 import numpy as np
 from typing import List
 from utils.conversion import uv2xyz, xyz2uv, depth2xyz, uv2pixel, depth2uv, pixel2uv, xyz2pixel, uv2lonlat
@@ -273,7 +273,7 @@ def get_heat_map(u_s, patch_num=256, sigma=2, window_width=15, show=False):
     gauss_map = get_gauss_map(sigma, window_width)
     heat_map_all = []
     for u in pixel_us:
-        heat_map = np.zeros(patch_num, dtype=np.float)
+        heat_map = np.zeros(patch_num, dtype=np.float64)
         left = u-window_width
         right = u+window_width+1
 
@@ -470,4 +470,3 @@ if __name__ == '__main__':
                         [0.8, 0.7]])
     get_heat_map(u=corners[..., 0], show=True, sigma=2, width=15)
     pass
-

@@ -85,6 +85,47 @@ def get_model(args):
     return model
 
 
+def build_demo():
+    description = "This demo of the project " \
+                  "<a href='https://github.com/zhigangjiang/LGT-Net' target='_blank'>LGT-Net</a>. " \
+                  "It uses the Geometry-Aware Transformer Network to predict the 3d room layout of an rgb panorama."
+
+    examples = [
+        ['src/demo/demo1.png', True, 'mp3d', 'manhattan',
+         ['depth-normal-gradient', '2d-floorplan'], '.gltf', '256'],
+        ['src/demo/demo.png', True, 'mp3d', 'manhattan',
+         ['depth-normal-gradient', '2d-floorplan'], '.gltf', '256'],
+    ]
+
+    return gr.Interface(
+        fn=greet,
+        inputs=[
+            gr.Image(type='filepath', label='input rgb panorama', value=examples[0][0]),
+            gr.Checkbox(label='pre-processing', value=True),
+            gr.Radio(['mp3d', 'zind'], label='pre-trained weight', value='mp3d'),
+            gr.Radio(['manhattan', 'atalanta', 'original'],
+                     label='post-processing method', value='manhattan'),
+            gr.CheckboxGroup(['depth-normal-gradient', '2d-floorplan'],
+                             label='2d-visualization',
+                             value=['depth-normal-gradient', '2d-floorplan']),
+            gr.Radio(['.gltf', '.obj', '.glb'], label='output format of 3d mesh', value='.gltf'),
+            gr.Radio(['128', '256', '512', '1024'], label='output resolution of 3d mesh', value='256'),
+        ],
+        outputs=[
+            gr.Image(label='predicted result 2d-visualization', type='filepath'),
+            gr.Model3D(label='3d mesh reconstruction', clear_color=(1.0, 1.0, 1.0, 1.0)),
+            gr.File(label='3d mesh file'),
+            gr.File(label='vanishing point information'),
+            gr.File(label='layout json'),
+        ],
+        examples=examples,
+        title='LGT-Net',
+        flagging_mode='never',
+        cache_examples=False,
+        description=description,
+    )
+
+
 if __name__ == '__main__':
     logger = get_logger()
     args = Namespace(device='cuda', output_dir='src/output', visualize_3d=False, output_3d=True)
@@ -96,44 +137,4 @@ if __name__ == '__main__':
     args.cfg = 'src/config/zind.yaml'
     zind_model = get_model(args)
 
-    description = "This demo of the project " \
-                  "<a href='https://github.com/zhigangjiang/LGT-Net' target='_blank'>LGT-Net</a>. " \
-                  "It uses the Geometry-Aware Transformer Network to predict the 3d room layout of an rgb panorama."
-
-    demo = gr.Interface(fn=greet,
-                        inputs=[gr.Image(type='filepath', label='input rgb panorama', value='src/demo/pano_demo1.png'),
-                                gr.Checkbox(label='pre-processing', value=True),
-                                gr.Radio(['mp3d', 'zind'],
-                                         label='pre-trained weight',
-                                         value='mp3d'),
-                                gr.Radio(['manhattan', 'atalanta', 'original'],
-                                         label='post-processing method',
-                                         value='manhattan'),
-                                gr.CheckboxGroup(['depth-normal-gradient', '2d-floorplan'],
-                                                 label='2d-visualization',
-                                                 value=['depth-normal-gradient', '2d-floorplan']),
-                                gr.Radio(['.gltf', '.obj', '.glb'],
-                                         label='output format of 3d mesh',
-                                         value='.gltf'),
-                                gr.Radio(['128', '256', '512', '1024'],
-                                         label='output resolution of 3d mesh',
-                                         value='256'),
-                                ],
-                        outputs=[gr.Image(label='predicted result 2d-visualization', type='filepath'),
-                                 gr.Model3D(label='3d mesh reconstruction', clear_color=[1.0, 1.0, 1.0, 1.0]),
-                                 gr.File(label='3d mesh file'),
-                                 gr.File(label='vanishing point information'),
-                                 gr.File(label='layout json')],
-                        examples=[
-                            ['src/demo/pano_demo1.png',  True,  'mp3d', 'manhattan', ['depth-normal-gradient', '2d-floorplan'], '.gltf', '256'],
-                            ['src/demo/mp3d_demo1.png',  False, 'mp3d', 'manhattan', ['depth-normal-gradient', '2d-floorplan'], '.gltf', '256'],
-                            ['src/demo/mp3d_demo2.png',  False, 'mp3d', 'manhattan', ['depth-normal-gradient', '2d-floorplan'], '.gltf', '256'],
-                            ['src/demo/mp3d_demo3.png',  False, 'mp3d', 'manhattan', ['depth-normal-gradient', '2d-floorplan'], '.gltf', '256'],
-                            ['src/demo/zind_demo1.png',  True, 'zind', 'manhattan', ['depth-normal-gradient', '2d-floorplan'], '.gltf', '256'],
-                            ['src/demo/zind_demo2.png',  False, 'zind',  'atalanta', ['depth-normal-gradient', '2d-floorplan'], '.gltf', '256'],
-                            ['src/demo/zind_demo3.png',  True, 'zind', 'manhattan', ['depth-normal-gradient', '2d-floorplan'], '.gltf', '256'],
-                            ['src/demo/other_demo1.png', False, 'mp3d', 'manhattan', ['depth-normal-gradient', '2d-floorplan'], '.gltf', '256'],
-                            ['src/demo/other_demo2.png', True,  'mp3d', 'manhattan', ['depth-normal-gradient', '2d-floorplan'], '.gltf', '256'],
-                        ], title='LGT-Net', allow_flagging="never", cache_examples=False, description=description)
-
-    demo.launch(debug=True, enable_queue=False)
+    build_demo().launch(debug=True)

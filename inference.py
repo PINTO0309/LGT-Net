@@ -152,7 +152,7 @@ def show_alpha_floorplan(dt_xyz, side_l=512, border_color=None):
     dt_floorplan = draw_floorplan(xz=dt_xyz[..., ::2], fill_color=fill_color,
                                   border_color=border_color, side_l=side_l, show=False, center_color=[1, 0, 0, 1])
     dt_floorplan = Image.fromarray((dt_floorplan * 255).astype(np.uint8), mode='RGBA')
-    back = np.zeros([side_l, side_l, len(fill_color)], dtype=np.float)
+    back = np.zeros([side_l, side_l, len(fill_color)], dtype=np.float64)
     back[..., :] = [0.8, 0.8, 0.8, 1]
     back = Image.fromarray((back * 255).astype(np.uint8), mode='RGBA')
     iou_floorplan = Image.alpha_composite(back, dt_floorplan).convert("RGB")
@@ -186,14 +186,14 @@ def inference():
             img, vp = preprocess(img, vp_cache_path=os.path.join(args.output_dir, f"{name}_vp.txt"))
 
         img = (img / 255.0).astype(np.float32)
-        run_one_inference(img, model, args, name, logger)
+        run_one_inference(img, model, args, name, logger, show=False)
 
 
 def inference_dataset(dataset):
     bar = tqdm(dataset, ncols=100)
     for data in bar:
         bar.set_description(data['id'])
-        run_one_inference(data['image'].transpose(1, 2, 0), model, args, name=data['id'], logger=logger)
+        run_one_inference(data['image'].transpose(1, 2, 0), model, args, name=data['id'], logger=logger, show=False)
 
 
 @torch.no_grad()

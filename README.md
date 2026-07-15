@@ -14,14 +14,26 @@ This is PyTorch implementation of our paper "[LGT-Net: Indoor Panoramic Room Lay
 - [demo app](https://huggingface.co/spaces/zhigangjiang/LGT-Net) that runs on HuggingFace Space🤗.
 - [demo script](https://colab.research.google.com/drive/1mvwXVXGlrkApdMW6_8_prFBHjxwTReA6?usp=sharing) that runs on Google colab.
 
+Run the Gradio app locally after installing the locked environment. The required mp3d and ZInd checkpoints are downloaded on first launch.
+
+```shell
+uv run python app.py
+```
+
 
 
 
 # Installation
-Install our dependencies:
+
+The supported environment is Linux x86_64 with glibc 2.31 or newer and an NVIDIA driver compatible with CUDA 12.8. A system CUDA Toolkit is not required because PyTorch installs the CUDA runtime from its wheel.
+
+Install the Python 3.12.12 environment and all dependencies from the lockfile with [uv](https://docs.astral.sh/uv/):
+
 ```shell
-pip install -r requirements.txt
+uv sync --frozen
 ```
+
+uv automatically installs CPython 3.12.12 when it is not already available. PyQt5 and PyOpenGL are included in the default environment; the desktop 3D viewer additionally requires a graphical desktop session and the corresponding system OpenGL/X11 libraries.
 
 # Preparing Dataset
 ### MatterportLayout
@@ -129,18 +141,19 @@ You can evaluate by executing the following command:
 
 - MatterportLayout dataset
     ```shell
-    python main.py --cfg src/config/mp3d.yaml --mode test --need_rmse
+    uv run python main.py --cfg src/config/mp3d.yaml --mode test --need_rmse
     ```
 - ZInd dataset
     ```shell
-    python main.py --cfg src/config/zind.yaml --mode test --need_rmse
+    uv run python main.py --cfg src/config/zind.yaml --mode test --need_rmse
     ```
 - PanoContext dataset
   ```shell
-  python main.py --cfg src/config/pano.yaml --mode test --need_cpe --post_processing manhattan --force_cube
+  uv run python main.py --cfg src/config/pano.yaml --mode test --need_cpe --post_processing manhattan --force_cube
+  ```
 - Stanford 2D-3D dataset
     ```shell
-    python main.py --cfg src/config/s2d3d.yaml --mode test --need_cpe --post_processing manhattan --force_cube
+    uv run python main.py --cfg src/config/s2d3d.yaml --mode test --need_cpe --post_processing manhattan --force_cube
     ```
     - `--post_processing` type of post-processing approach, 
       we use [DuLa-Net](https://github.com/SunDaDenny/DuLa-Net) post-processing and optimize by adding occlusion detection (described in [here](Post-Porcessing.md) ) to process `manhattan` constraint (`manhattan_old` represents the original method),
@@ -158,7 +171,7 @@ You can evaluate by executing the following command:
 # Training
 Execute the following commands to train  (e.g., MatterportLayout dataset):
 ```shell
-python main.py --cfg src/config/mp3d.yaml --mode train
+uv run python main.py --cfg src/config/mp3d.yaml --mode train
 ```
 You can copy and modify the configuration in `YAML` file for other training.
 
@@ -166,7 +179,7 @@ You can copy and modify the configuration in `YAML` file for other training.
 We provide an inference script (`inference.py`) that you can
 try to predict your panoramas by executing the following command (e.g., using pre-trained weights of MatterportLayout dataset):
 ```shell
-python inference.py --cfg src/config/mp3d.yaml --img_glob src/demo/demo1.png --output_dir src/output --post_processing manhattan
+uv run python inference.py --cfg src/config/mp3d.yaml --img_glob src/demo/demo1.png --output_dir src/output --post_processing manhattan
 ```
 It will output json files(`xxx_pred.json`, format is the same as [PanoAnnotator](https://github.com/SunDaDenny/PanoAnnotator)) and visualization images (`xxx_pred.png`) under **output_dir**.
 visualization image:

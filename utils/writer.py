@@ -7,6 +7,7 @@ import numpy as np
 
 
 def xyz2json(xyz, ratio, camera_height=1.6):
+    ratio = float(ratio)
     xyz = xyz * camera_height
     ceiling_height = camera_height * ratio
     layout_height = camera_height + ceiling_height
@@ -53,4 +54,3 @@ def xyz2json(xyz, ratio, camera_height=1.6):
         data['layoutWalls']['walls'].append(tmp)
 
     return data
-

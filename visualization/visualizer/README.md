@@ -3,13 +3,18 @@
 This repo is a visualization tool for 360 Manhattan layout based on PyQt5 and OpenGL. The layout format follows <a href='https://github.com/fuenwang/LayoutMP3D'>LayoutMP3D</a>. 
 <p align='center'><image src='src/3Dlayout.png' width='100%'></image></p>
 
-First, install the corresponding packages with the following command.
+Install the locked project environment from the repository root. The Python dependencies for the visualizer are included in the default environment.
+
 ```bash
-pip install -r requirements.txt
+uv sync --frozen
 ```
-Then, run the script for the visualization of our provided example.
+
+Then, from the repository root, run the visualizer for the provided example. A graphical desktop session and the corresponding system OpenGL/X11 libraries are required.
+
 ```bash
-python visualizer.py --img src/example.jpg  --json src/example.json
+uv run python visualization/visualizer/visualizer.py \
+  --img visualization/visualizer/src/example.jpg \
+  --json visualization/visualizer/src/example.json
 ```
 You can use mouse and keyboard to control the camera.
 ```yaml

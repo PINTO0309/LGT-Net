@@ -64,7 +64,7 @@ class Resnet(nn.Module):
     def __init__(self, backbone='resnet50', pretrained=True):
         super(Resnet, self).__init__()
         assert backbone in ENCODER_RESNET
-        self.encoder = getattr(models, backbone)(pretrained=pretrained)
+        self.encoder = models.get_model(backbone, weights="DEFAULT" if pretrained else None)
         del self.encoder.fc, self.encoder.avgpool
 
     def forward(self, x):
@@ -98,7 +98,7 @@ class Densenet(nn.Module):
     def __init__(self, backbone='densenet169', pretrained=True):
         super(Densenet, self).__init__()
         assert backbone in ENCODER_DENSENET
-        self.encoder = getattr(models, backbone)(pretrained=pretrained)
+        self.encoder = models.get_model(backbone, weights="DEFAULT" if pretrained else None)
         self.final_relu = nn.ReLU(inplace=True)
         del self.encoder.classifier
 
