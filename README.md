@@ -197,23 +197,29 @@ uv run python export_onnx.py --models mp3d
 
 ### CUDA quick start
 
-Run the included panorama with CUDA device 0:
+Run both included panoramas with CUDA device 0:
 
 ```shell
 uv run python inference_onnx.py \
---model checkpoints/onnx/lgt_net_mp3d_opset17.onnx \
---img-glob src/demo/demo1.png \
---output-dir src/output_onnx \
---post-processing manhattan \
---backend cuda \
---device-id 0
+  --model checkpoints/onnx/lgt_net_mp3d_opset17.onnx \
+  --img-glob 'src/demo/demo*.png' \
+  --output-dir src/output_onnx \
+  --post-processing manhattan \
+  --backend cuda \
+  --device-id 0
 ```
 
 The command prints the enabled providers at startup. For this command, the first provider must be `CUDAExecutionProvider`; the script reports an error instead of silently running only on CPU when CUDA cannot be enabled.
 
-The following sample was generated from `src/demo/demo1.png` with the command above. Green lines show the raw network prediction, red lines show the Manhattan post-processed layout, and the right-hand panel is the estimated floorplan.
+The following samples were generated from the included panoramas with the CUDA settings above. Green lines show the raw network prediction, red lines show the Manhattan post-processed layout, and the right-hand panel is the estimated floorplan.
+
+`src/demo/demo1.png`:
 
 ![ONNX Runtime CUDA inference result](src/fig/demo1_onnx_cuda_pred.png)
+
+`src/demo/demo.png`:
+
+![ONNX Runtime CUDA inference result for demo.png](src/fig/demo_onnx_cuda_pred.png)
 
 ### Selecting a backend
 
