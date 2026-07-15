@@ -4,6 +4,8 @@ This is PyTorch implementation of our paper "[LGT-Net: Indoor Panoramic Room Lay
 
 ![network](src/fig/network.png)
 
+<img width="1416" height="512" alt="demo1_onnx_cuda_pred" src="https://github.com/user-attachments/assets/27456e35-f7b8-4ba7-aeb4-627a803419a3" />
+<img width="1416" height="512" alt="demo_onnx_cuda_pred" src="https://github.com/user-attachments/assets/3e10955f-672e-460b-b706-112ae587e771" />
 
 # Update
 - 2023.5.18 Update post-processing. If you want to reproduce the post-processing results of paper, please switch to the old [commit](https://github.com/zhigangjiang/LGT-Net/tree/b642d6288e3a4bf265e54ab93eed3455e760402b). Check out the [Post-Porcessing.md](Post-Porcessing.md) for more information.
