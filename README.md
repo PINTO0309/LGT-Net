@@ -1,5 +1,5 @@
 # LGT-Net
-This is PyTorch implementation of our paper "[LGT-Net: Indoor Panoramic Room Layout Estimation with Geometry-Aware Transformer Network](https://arxiv.org/abs/2203.01824)"(CVPR'22). [[Supplemental Materials](https://drive.google.com/file/d/1vmNoWXdxKc4or2iUKNvkKRTV8pwxSi0J/view?usp=sharing)] [[Video](https://youtu.be/jh0pkaJaOr8)] [[Presentation](https://docs.google.com/presentation/d/1XC3SNCjuXT7m2jjT64UhUA145yBgHJaY/edit?usp=sharing&ouid=116719086346747292409&rtpof=true&sd=true)] [[Poster](https://drive.google.com/file/d/1Uy0qdkDVSARnz4ef9oNgI9tG_UgiuO00/view?usp=sharing)] 
+This is PyTorch implementation of our paper "[LGT-Net: Indoor Panoramic Room Layout Estimation with Geometry-Aware Transformer Network](https://arxiv.org/abs/2203.01824)"(CVPR'22). [[Supplemental Materials](https://drive.google.com/file/d/1vmNoWXdxKc4or2iUKNvkKRTV8pwxSi0J/view?usp=sharing)] [[Video](https://youtu.be/jh0pkaJaOr8)] [[Presentation](https://docs.google.com/presentation/d/1XC3SNCjuXT7m2jjT64UhUA145yBgHJaY/edit?usp=sharing&ouid=116719086346747292409&rtpof=true&sd=true)] [[Poster](https://drive.google.com/file/d/1Uy0qdkDVSARnz4ef9oNgI9tG_UgiuO00/view?usp=sharing)]
 
 
 ![network](src/fig/network.png)
@@ -11,7 +11,6 @@ This is PyTorch implementation of our paper "[LGT-Net: Indoor Panoramic Room Lay
 
 
 # Demo
-- [demo app](https://huggingface.co/spaces/zhigangjiang/LGT-Net) that runs on HuggingFace Space🤗.
 - [demo notebook](demo.ipynb) for local Jupyter and Google Colab. To use it on Colab, upload `demo.ipynb` from your local copy with **File > Upload notebook**, then run the cells in order.
 
 Run the Gradio app locally after installing the locked environment. The required mp3d and ZInd checkpoints are downloaded on first launch.
@@ -110,7 +109,7 @@ src/dataset/pano_s2d3d
 |-- valid
     |-- img
     |-- label_cor
-     
+
 ```
 # Downloading Pre-trained Weights
 We provide pre-trained weights on individual datasets at [here](https://drive.google.com/drive/folders/1bOZyXeuNnwFEC9nw7EgJUwMiI685obdT?usp=sharing).
@@ -155,17 +154,17 @@ You can evaluate by executing the following command:
     ```shell
     uv run python main.py --cfg src/config/s2d3d.yaml --mode test --need_cpe --post_processing manhattan --force_cube
     ```
-    - `--post_processing` type of post-processing approach, 
+    - `--post_processing` type of post-processing approach,
       we use [DuLa-Net](https://github.com/SunDaDenny/DuLa-Net) post-processing and optimize by adding occlusion detection (described in [here](Post-Porcessing.md) ) to process `manhattan` constraint (`manhattan_old` represents the original method),
       use [DP algorithm](https://en.wikipedia.org/wiki/Ramer%E2%80%93Douglas%E2%80%93Peucker_algorithm)  to process `atalanta` constraint, default is disabled.
     - `--need_rmse` need to evaluate root mean squared error and delta error, default is disabled.
     - `--need_cpe` need to evaluate corner error and pixel error, default is disabled.
-    - `--need_f1` need to evaluate corner metrics (Precision, Recall and F$_1$-score) 
+    - `--need_f1` need to evaluate corner metrics (Precision, Recall and F$_1$-score)
       with **10 pixels** as threshold(code from [here](https://github.com/bertjiazheng/indoor-layout-evaluation)), default is disabled.
     - `--force_cube` force cube shape when evaluating, default is disabled.
     - `--wall_num` different corner number to evaluate, default is all.
-    - `--save_eval` save the visualization evaluating results of each panorama, 
-      the output results locate in the corresponding checkpoint directory 
+    - `--save_eval` save the visualization evaluating results of each panorama,
+      the output results locate in the corresponding checkpoint directory
       (e.g., `checkpoints/SWG_Transformer_LGT_Net/mp3d/results/test`), default is disabled.
 
 # Training
@@ -189,8 +188,8 @@ visualization image:
 
 - `--post_processing` If `manhattan` is selected,
 we will preprocess the panorama so that the vanishing points are
-aligned with the axes for post-processing. Note that after preprocessing 
-our predicted results will not align with your input panoramas, 
+aligned with the axes for post-processing. Note that after preprocessing
+our predicted results will not align with your input panoramas,
 you can use the output file (`vp.txt`) of vanishing points to reverse align them manually.
 
 - `--visualize_3d` 3D visualization of output results (need install dependencies and GUI desktop environment).
