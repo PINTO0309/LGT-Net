@@ -92,10 +92,14 @@ src/dataset/zind
 ---
 
 ### PanoContext and Stanford 2D-3D
-We follow the same preprocessed pano/s2d3d  proposed by [HorizonNet](https://github.com/sunset1995/HorizonNet#dataset).
-You also can directly download the dataset file in [here](https://drive.google.com/file/d/164DnSxz6ap8GcytRAPfJlIMvNPaikZEc/view?usp=sharing).
+We use the preprocessed PanoContext and Stanford 2D-3D datasets provided by [HorizonNet](https://github.com/sunset1995/HorizonNet#dataset). The combined dataset is distributed from the LGT-Net [data release](https://github.com/PINTO0309/LGT-Net/releases/tag/data):
 
-Make sure the dataset files are stored as follows:
+- [lgt-net-dataset-pano-s2d3d.zip](https://github.com/PINTO0309/LGT-Net/releases/download/data/lgt-net-dataset-pano-s2d3d.zip)
+
+The archive preserves the top-level `pano_s2d3d/` directory. Extract it into `src/dataset/`; no manual file moves or directory renaming are required. The [demo notebook](demo.ipynb) downloads and extracts this archive automatically.
+
+After extraction, the files are arranged as follows:
+
 ```
 src/dataset/pano_s2d3d
 |-- test
@@ -112,15 +116,20 @@ src/dataset/pano_s2d3d
 
 ```
 # Downloading Pre-trained Weights
-We provide pre-trained weights on individual datasets at [here](https://drive.google.com/drive/folders/1bOZyXeuNnwFEC9nw7EgJUwMiI685obdT?usp=sharing).
+Pre-trained weights are distributed as two archives in the [data release](https://github.com/PINTO0309/LGT-Net/releases/tag/data):
 
-- [mp3d/best.pkl](https://drive.google.com/file/d/1o97oAmd-yEP5bQrM0eAWFPLq27FjUDbh/view?usp=sharing): Training on MatterportLayout dataset
-- [zind/best.pkl](https://drive.google.com/file/d/1PzBj-dfDfH_vevgSkRe5kczW0GVl_43I/view?usp=sharing): Training on ZInd dataset
-- [pano/best.pkl](https://drive.google.com/file/d/1JoeqcPbm_XBPOi6O9GjjWi3_rtyPZS8m/view?usp=sharing): Training on PanoContext(train)+Stanford2D-3D(whole) dataset
-- [s2d3d/best.pkl](https://drive.google.com/file/d/1PfJzcxzUsbwwMal7yTkBClIFgn8IdEzI/view?usp=sharing): Training on Stanford2D-3D(train)+PanoContext(whole) dataset
-- [ablation_study_full/best.pkl](https://drive.google.com/file/d/1U16TxUkvZlRwJNaJnq9nAUap-BhCVIha/view?usp=sharing): Ablation Study: Ours (full) on MatterportLayout dataset
+- [lgt-net-checkpoints-benchmarks.zip](https://github.com/PINTO0309/LGT-Net/releases/download/data/lgt-net-checkpoints-benchmarks.zip)
+  - `mp3d/best.pkl`: trained on MatterportLayout
+  - `zind/best.pkl`: trained on ZInD
+  - `pano/best.pkl`: trained on PanoContext (train) and Stanford 2D-3D (whole)
+  - `s2d3d/best.pkl`: trained on Stanford 2D-3D (train) and PanoContext (whole)
+- [lgt-net-checkpoints-ablation-study.zip](https://github.com/PINTO0309/LGT-Net/releases/download/data/lgt-net-checkpoints-ablation-study.zip)
+  - `ablation_study_full/best.pkl`: full LGT-Net ablation configuration trained on MatterportLayout
 
-Make sure the pre-trained weight files are stored as follows:
+Both archives preserve the complete `checkpoints/SWG_Transformer_LGT_Net/` hierarchy. Extract them into the repository root; no manual file moves or directory renaming are required. The [demo notebook](demo.ipynb) downloads and extracts both archives automatically.
+
+After extraction, the files are arranged as follows:
+
 ```
 checkpoints
 |-- SWG_Transformer_LGT_Net
