@@ -15,7 +15,8 @@ from utils.misc import tensor2np
 class LGT_Net(BaseModule):
     def __init__(self, ckpt_dir=None, backbone='resnet50', dropout=0.0, output_name='LGT',
                  decoder_name='Transformer', win_size=8, depth=6,
-                 ape=None, rpe=None, corner_heat_map=False, rpe_pos=1):
+                 ape=None, rpe=None, corner_heat_map=False, rpe_pos=1,
+                 pretrained_backbone=True):
         super().__init__(ckpt_dir)
 
         self.patch_num = 256
@@ -29,7 +30,10 @@ class LGT_Net(BaseModule):
             self.feature_extractor = PatchFeatureExtractor(patch_num=self.patch_num, input_shape=[3, 512, 1024])
         else:
             # feature extractor
-            self.feature_extractor = HorizonNetFeatureExtractor(backbone)
+            self.feature_extractor = HorizonNetFeatureExtractor(
+                backbone,
+                pretrained=pretrained_backbone,
+            )
 
         if 'Transformer' in self.decoder_name:
             # transformer encoder

@@ -144,6 +144,127 @@ checkpoints
 |   |-- zind
 |       |-- best.pkl
 ```
+
+# ONNX Export
+
+Export all five published checkpoints with the default opset 17:
+
+```shell
+uv run python export_onnx.py
+```
+
+The script exports each checkpoint, automatically simplifies it with `onnxsim`, checks the simplified graph with ONNX, and compares its outputs with PyTorch using ONNX Runtime. Simplified models are written to `checkpoints/onnx/`:
+
+```text
+checkpoints/onnx
+|-- lgt_net_ablation_study_full_opset17.onnx
+|-- lgt_net_mp3d_opset17.onnx
+|-- lgt_net_pano_opset17.onnx
+|-- lgt_net_s2d3d_opset17.onnx
+|-- lgt_net_zind_opset17.onnx
+```
+
+Select a different opset with `--opset`, or export only selected checkpoints with `--models`:
+
+```shell
+uv run python export_onnx.py --opset 18 --models mp3d zind
+```
+
+Models use a fixed batch size of 1 by default. Add `--dynamic-batch` only when the target runtime needs a dynamic batch dimension:
+
+```shell
+uv run python export_onnx.py --dynamic-batch
+```
+
+Export runs on CPU by default. Use `--device cuda:0` to perform the PyTorch export pass on a CUDA device. The ONNX interface is:
+
+- Input: `image`, float32 `[1, 3, 512, 1024]`, with image values in the `[0, 1]` range
+- Output: `depth`, float32 `[1, 256]`
+- Output: `ratio`, float32 `[1, 1]`
+
+With `--dynamic-batch`, the leading `1` in all three shapes becomes a dynamic `batch` dimension. The channel and spatial dimensions remain fixed by the model architecture.
+
+## ONNX Runtime inference
+
+`inference_onnx.py` runs an exported LGT-Net model without loading the PyTorch checkpoint. It accepts a panorama image or a glob pattern and generates the same layout JSON and a comparable visualization as `inference.py`.
+
+Before running inference, install the locked environment and make sure the required ONNX model exists. For example, export only the MatterportLayout model with:
+
+```shell
+uv sync --frozen
+uv run python export_onnx.py --models mp3d
+```
+
+### CUDA quick start
+
+Run the included panorama with CUDA device 0:
+
+```shell
+uv run python inference_onnx.py \
+--model checkpoints/onnx/lgt_net_mp3d_opset17.onnx \
+--img-glob src/demo/demo1.png \
+--output-dir src/output_onnx \
+--post-processing manhattan \
+--backend cuda \
+--device-id 0
+```
+
+The command prints the enabled providers at startup. For this command, the first provider must be `CUDAExecutionProvider`; the script reports an error instead of silently running only on CPU when CUDA cannot be enabled.
+
+The following sample was generated from `src/demo/demo1.png` with the command above. Green lines show the raw network prediction, red lines show the Manhattan post-processed layout, and the right-hand panel is the estimated floorplan.
+
+![ONNX Runtime CUDA inference result](src/fig/demo1_onnx_cuda_pred.png)
+
+### Selecting a backend
+
+Use `--backend` to select the ONNX Runtime execution backend:
+
+| Backend | Option | Provider priority | Notes |
+|---|---|---|---|
+| CPU | `--backend cpu` | CPU | Default; no NVIDIA GPU is required. |
+| CUDA | `--backend cuda` | CUDA, then CPU | Select a GPU with `--device-id`. CUDA and cuDNN libraries from the locked PyTorch environment are preloaded automatically. |
+| TensorRT | `--backend tensorrt` | TensorRT, CUDA, then CPU | Requires compatible TensorRT runtime libraries. Engine caching and FP16 are enabled by default. |
+
+For CPU inference, change only the backend:
+
+```shell
+uv run python inference_onnx.py \
+--model checkpoints/onnx/lgt_net_mp3d_opset17.onnx \
+--img-glob src/demo/demo1.png \
+--output-dir src/output_onnx \
+--backend cpu
+```
+
+For TensorRT, optionally select a persistent engine-cache directory. The first run can take considerably longer while TensorRT builds the engine; subsequent sessions reuse the cache.
+
+```shell
+uv run python inference_onnx.py \
+--model checkpoints/onnx/lgt_net_mp3d_opset17.onnx \
+--img-glob src/demo/demo1.png \
+--output-dir src/output_onnx \
+--backend tensorrt \
+--device-id 0 \
+--trt-engine-cache-dir checkpoints/onnx/.trt_cache/mp3d
+```
+
+Pass `--no-trt-fp16` if FP16 should be disabled. When `--trt-engine-cache-dir` is omitted, the default is `checkpoints/onnx/.trt_cache/<model name>/`.
+
+### Inputs, models, and outputs
+
+- `--model` selects one of the exported `.onnx` files under `checkpoints/onnx/`. The MatterportLayout model is used by default.
+- `--img-glob` accepts one image or a glob such as `'path/to/panoramas/*.png'`. Quote wildcard patterns so that the script, rather than the shell, expands them.
+- `--post-processing` accepts `manhattan` (default), `atalanta`, or `original`.
+- `--output-dir` selects the destination directory and defaults to `src/output_onnx`.
+- `--device-id` selects the CUDA device for the CUDA and TensorRT backends and defaults to `0`.
+
+Each input image produces:
+
+- `<name>_pred.png`: boundary and floorplan visualization
+- `<name>_pred.json`: PanoAnnotator-compatible layout data
+- `<name>_vp.txt`: vanishing points, when Manhattan alignment is selected
+
+Both fixed-batch-1 and dynamic-batch exports are accepted. Multiple matched panoramas are processed one at a time. Run `uv run python inference_onnx.py --help` to see every option.
+
 # Evaluation
 You can evaluate by executing the following command:
 

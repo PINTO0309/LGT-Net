@@ -205,16 +205,16 @@ class HorizonNetFeatureExtractor(nn.Module):
     x_mean = torch.FloatTensor(np.array([0.485, 0.456, 0.406])[None, :, None, None])
     x_std = torch.FloatTensor(np.array([0.229, 0.224, 0.225])[None, :, None, None])
 
-    def __init__(self, backbone='resnet50'):
+    def __init__(self, backbone='resnet50', pretrained=True):
         super(HorizonNetFeatureExtractor, self).__init__()
         self.out_scale = 8
         self.step_cols = 4
 
         # Encoder
         if backbone.startswith('res'):
-            self.feature_extractor = Resnet(backbone, pretrained=True)
+            self.feature_extractor = Resnet(backbone, pretrained=pretrained)
         elif backbone.startswith('dense'):
-            self.feature_extractor = Densenet(backbone, pretrained=True)
+            self.feature_extractor = Densenet(backbone, pretrained=pretrained)
         else:
             raise NotImplementedError()
 

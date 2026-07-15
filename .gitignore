@@ -1,5 +1,6 @@
 src/output
 checkpoints/SWG*/
+checkpoints/onnx/
 flagged
 .venv/
 .downloads/
