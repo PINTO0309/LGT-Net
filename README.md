@@ -12,7 +12,7 @@ This is PyTorch implementation of our paper "[LGT-Net: Indoor Panoramic Room Lay
 
 # Demo
 - [demo app](https://huggingface.co/spaces/zhigangjiang/LGT-Net) that runs on HuggingFace Space🤗.
-- [demo script](https://colab.research.google.com/drive/1mvwXVXGlrkApdMW6_8_prFBHjxwTReA6?usp=sharing) that runs on Google colab.
+- [demo notebook](demo.ipynb) for local Jupyter and Google Colab. To use it on Colab, upload `demo.ipynb` from your local copy with **File > Upload notebook**, then run the cells in order.
 
 Run the Gradio app locally after installing the locked environment. The required mp3d and ZInd checkpoints are downloaded on first launch.
 
