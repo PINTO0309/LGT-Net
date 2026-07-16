@@ -38,7 +38,8 @@ uv automatically installs CPython 3.12.12 when it is not already available. PyQt
 
 # Preparing Dataset
 ### MatterportLayout
-Office MatterportLayout dataset is at [here](https://github.com/ericsujw/Matterport3DLayoutAnnotation).
+Download the [MatterportLayout archive](https://drive.google.com/file/d/1rEWXy5zHVozHC0hKHsuHTxchrNHfYoJ4/view?usp=sharing) from Google Drive and extract it into `src/dataset/`. The archive preserves the top-level `mp3d/` directory. The [demo notebook](demo.ipynb) downloads and extracts it automatically.
+
 >If you have problems using this dataset, attention to this [issue](https://github.com/zhigangjiang/LGT-Net/issues/6).
 
 Make sure the dataset files are stored as follows:
@@ -94,13 +95,10 @@ src/dataset/zind
 ---
 
 ### PanoContext and Stanford 2D-3D
-We use the preprocessed PanoContext and Stanford 2D-3D datasets provided by [HorizonNet](https://github.com/sunset1995/HorizonNet#dataset). The combined dataset is distributed from the LGT-Net [data release](https://github.com/PINTO0309/LGT-Net/releases/tag/data):
+We follow the same preprocessed pano/s2d3d proposed by [HorizonNet](https://github.com/sunset1995/HorizonNet#dataset).
+Download the [combined archive](https://drive.google.com/file/d/164DnSxz6ap8GcytRAPfJlIMvNPaikZEc/view?usp=sharing) from Google Drive and extract it into `src/dataset/`. The archive preserves the top-level `pano_s2d3d/` directory. The [demo notebook](demo.ipynb) downloads and extracts it automatically.
 
-- [lgt-net-dataset-pano-s2d3d.zip](https://github.com/PINTO0309/LGT-Net/releases/download/data/lgt-net-dataset-pano-s2d3d.zip)
-
-The archive preserves the top-level `pano_s2d3d/` directory. Extract it into `src/dataset/`; no manual file moves or directory renaming are required. The [demo notebook](demo.ipynb) downloads and extracts this archive automatically.
-
-After extraction, the files are arranged as follows:
+Make sure the dataset files are stored as follows:
 
 ```
 src/dataset/pano_s2d3d
