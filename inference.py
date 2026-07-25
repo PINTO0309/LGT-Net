@@ -10,7 +10,6 @@ import numpy as np
 import torch
 import matplotlib.pyplot as plt
 import glob
-import torch.utils.benchmark as benchmark
 
 from tqdm import tqdm
 from PIL import Image
@@ -30,6 +29,7 @@ from models.lgt_net import LGT_Net
 from utils.writer import xyz2json
 from visualization.boundary import draw_boundaries
 from visualization.floorplan import draw_floorplan, draw_iou_floorplan
+from visualization.obj3d import create_3d_obj
 
 
 def parse_option():
@@ -66,8 +66,6 @@ def parse_option():
                         type=str,
                         default='cuda',
                         help='device')
-
-    parser.add_argument('--benchmark', action='store_true', help='benchmarks model inference time')
 
     args = parser.parse_args()
     args.mode = 'test'
@@ -154,7 +152,7 @@ def show_alpha_floorplan(dt_xyz, side_l=512, border_color=None):
     dt_floorplan = draw_floorplan(xz=dt_xyz[..., ::2], fill_color=fill_color,
                                   border_color=border_color, side_l=side_l, show=False, center_color=[1, 0, 0, 1])
     dt_floorplan = Image.fromarray((dt_floorplan * 255).astype(np.uint8), mode='RGBA')
-    back = np.zeros([side_l, side_l, len(fill_color)], dtype=np.float64)
+    back = np.zeros([side_l, side_l, len(fill_color)], dtype=np.float)
     back[..., :] = [0.8, 0.8, 0.8, 1]
     back = Image.fromarray((back * 255).astype(np.uint8), mode='RGBA')
     iou_floorplan = Image.alpha_composite(back, dt_floorplan).convert("RGB")
@@ -162,80 +160,12 @@ def show_alpha_floorplan(dt_xyz, side_l=512, border_color=None):
     return dt_floorplan
 
 
-def save_pred_json(xyz, ration, save_path=None):
+def save_pred_json(xyz, ration, save_path):
     # xyz[..., -1] = -xyz[..., -1]
     json_data = xyz2json(xyz, ration)
-    if save_path is not None:
-        with open(save_path, 'w') as f:
-            f.write(json.dumps(json_data, indent=4) + '\n')
+    with open(save_path, 'w') as f:
+        f.write(json.dumps(json_data, indent=4) + '\n')
     return json_data
-
-
-# NOTE: Use run_batch_inference.py for inference on directory paths
-# def inference_dataset(dataset):
-#     bar = tqdm(dataset, ncols=100)
-#     for data in bar:
-#         bar.set_description(data['id'])
-#         run_one_inference(data['image'].transpose(1, 2, 0), model, args, name=data['id'], logger=logger)
-
-
-
-def benchmarked_inference(model, args, img, name, logger):
-    results = []
-    num_threads = [1, 2, 4, 8]
-    for threads in num_threads:
-        time = benchmark.Timer(
-            stmt='run_one_inference(img, model, args, name, logger)',
-            setup='from __main__ import run_one_inference',
-            label='Benchmarked Inference',
-            sub_label=f'{threads}',
-            num_threads=threads,
-        ).blocked_autorange(min_run_time=1)
-        results.append(time)
-    return results
-
-@torch.no_grad()
-def run_one_inference(img, model, args, name, logger, show=False, show_depth=True,
-                    show_floorplan=True, mesh_format='.obj', mesh_resolution=1024):
-    model.eval()   
-
-    dt = model(torch.from_numpy(img.transpose(2, 0, 1)[None]).to(args.device))
-    if args.post_processing != 'original':
-        dt['processed_xyz'] = post_process(tensor2np(dt['depth']), type_name=args.post_processing)
-
-    visualize_2d(img, dt,
-                show_depth=show_depth,
-                show_floorplan=show_floorplan,
-                show=show,
-                save_path=os.path.join(args.output_dir, f"{name}_pred.png"))
-    output_xyz = dt['processed_xyz'][0] if 'processed_xyz' in dt else depth2xyz(tensor2np(dt['depth'][0]))
-
-    json_data = save_pred_json(output_xyz, tensor2np(dt['ratio'][0])[0],
-                            save_path=os.path.join(args.output_dir, f"{name}_pred.json"))
-    # if args.visualize_3d:
-    #     from visualization.visualizer.visualizer import visualize_3d
-    #     visualize_3d(json_data, (img * 255).astype(np.uint8))
-
-    if args.visualize_3d or args.output_3d:
-        from visualization.obj3d import create_3d_obj
-        dt_boundaries = corners2boundaries(tensor2np(dt['ratio'][0])[0], corners_xyz=output_xyz, step=None,
-                                        length=mesh_resolution if 'processed_xyz' in dt else None,
-                                        visible=True if 'processed_xyz' in dt else False)
-        dt_layout_depth = layout2depth(dt_boundaries, show=False)
-
-        create_3d_obj(cv2.resize(img, dt_layout_depth.shape[::-1]), dt_layout_depth,
-                    save_path=os.path.join(args.output_dir, f"{name}_3d{mesh_format}") if args.output_3d else None,
-                    mesh=True,  show=args.visualize_3d)
-
-# @torch.no_grad()
-# def cuda_warm_up(model, args, iters=3):
-#     if 'cuda' in args.device:
-#         model.eval()
-#         warm_up_dummy = torch.zeros(1, 3, 512, 1024, device=args.device)
-#         for _ in range(iters):
-#             model(warm_up_dummy)
-
-#     return model
 
 
 def inference():
@@ -256,12 +186,46 @@ def inference():
             img, vp = preprocess(img, vp_cache_path=os.path.join(args.output_dir, f"{name}_vp.txt"))
 
         img = (img / 255.0).astype(np.float32)
-        if args.benchmark:
-            results = benchmarked_inference(model, args, img, name, logger)
-            for result in results:
-                print(f"Threads: {result.config['num_threads']}, Time: {result.time}")
         run_one_inference(img, model, args, name, logger)
 
+
+def inference_dataset(dataset):
+    bar = tqdm(dataset, ncols=100)
+    for data in bar:
+        bar.set_description(data['id'])
+        run_one_inference(data['image'].transpose(1, 2, 0), model, args, name=data['id'], logger=logger)
+
+
+@torch.no_grad()
+def run_one_inference(img, model, args, name, logger, show=True, show_depth=True,
+                      show_floorplan=True, mesh_format='.obj', mesh_resolution=1024):
+    model.eval()
+    dt = model(torch.from_numpy(img.transpose(2, 0, 1)[None]).to(args.device))
+    if args.post_processing != 'original':
+        dt['processed_xyz'] = post_process(tensor2np(dt['depth']), type_name=args.post_processing)
+
+    visualize_2d(img, dt,
+                 show_depth=show_depth,
+                 show_floorplan=show_floorplan,
+                 show=show,
+                 save_path=os.path.join(args.output_dir, f"{name}_pred.png"))
+    output_xyz = dt['processed_xyz'][0] if 'processed_xyz' in dt else depth2xyz(tensor2np(dt['depth'][0]))
+
+    json_data = save_pred_json(output_xyz, tensor2np(dt['ratio'][0])[0],
+                               save_path=os.path.join(args.output_dir, f"{name}_pred.json"))
+    # if args.visualize_3d:
+    #     from visualization.visualizer.visualizer import visualize_3d
+    #     visualize_3d(json_data, (img * 255).astype(np.uint8))
+
+    if args.visualize_3d or args.output_3d:
+        dt_boundaries = corners2boundaries(tensor2np(dt['ratio'][0])[0], corners_xyz=output_xyz, step=None,
+                                           length=mesh_resolution if 'processed_xyz' in dt else None,
+                                           visible=True if 'processed_xyz' in dt else False)
+        dt_layout_depth = layout2depth(dt_boundaries, show=False)
+
+        create_3d_obj(cv2.resize(img, dt_layout_depth.shape[::-1]), dt_layout_depth,
+                      save_path=os.path.join(args.output_dir, f"{name}_3d{mesh_format}") if args.output_3d else None,
+                      mesh=True,  show=args.visualize_3d)
 
 
 if __name__ == '__main__':

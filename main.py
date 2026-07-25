@@ -30,9 +30,10 @@ from evaluation.accuracy import calc_accuracy, show_heat_map, calc_ce, calc_pe, 
     show_depth_normal_grad, calc_f1_score
 from postprocessing.post_process import post_process
 
-
-def use_amp(config, device):
-    return config.AMP_OPT_LEVEL != "O0" and 'cuda' in device
+try:
+    from apex import amp
+except ImportError:
+    amp = None
 
 
 def parse_option():
@@ -167,12 +168,9 @@ def save(model, optimizer, epoch, iou_d, logger, writer, config):
 
 
 def train(model, train_data_loader, val_data_loader, optimizer, criterion, config, logger, writer, scheduler):
-    device = config.TRAIN.DEVICE
-    amp_enabled = use_amp(config, device)
-    scaler = torch.cuda.amp.GradScaler(enabled=amp_enabled)
     for epoch in range(config.TRAIN.START_EPOCH, config.TRAIN.EPOCHS):
         logger.info("=" * 200)
-        train_an_epoch(model, train_data_loader, optimizer, criterion, config, logger, writer, epoch, scaler)
+        train_an_epoch(model, train_data_loader, optimizer, criterion, config, logger, writer, epoch)
         epoch_iou_d, _ = val_an_epoch(model, val_data_loader, criterion, config, logger, writer, epoch)
 
         if config.LOCAL_RANK == 0:
@@ -186,7 +184,7 @@ def train(model, train_data_loader, val_data_loader, optimizer, criterion, confi
     writer.close()
 
 
-def train_an_epoch(model, train_data_loader, optimizer, criterion, config, logger, writer, epoch=0, scaler=None):
+def train_an_epoch(model, train_data_loader, optimizer, criterion, config, logger, writer, epoch=0):
     logger.info(f'Start Train Epoch {epoch}/{config.TRAIN.EPOCHS - 1}')
     model.train()
 
@@ -202,9 +200,6 @@ def train_an_epoch(model, train_data_loader, optimizer, criterion, config, logge
         bar = tqdm(bar, total=data_len, ncols=200)
 
     device = config.TRAIN.DEVICE
-    amp_enabled = use_amp(config, device)
-    if scaler is None:
-        scaler = torch.cuda.amp.GradScaler(enabled=amp_enabled)
     epoch_loss_d = {}
     for i, gt in bar:
         imgs = gt['image'].to(device, non_blocking=True)
@@ -212,20 +207,22 @@ def train_an_epoch(model, train_data_loader, optimizer, criterion, config, logge
         gt['ratio'] = gt['ratio'].to(device, non_blocking=True)
         if 'corner_heat_map' in gt:
             gt['corner_heat_map'] = gt['corner_heat_map'].to(device, non_blocking=True)
-        with torch.cuda.amp.autocast(enabled=amp_enabled):
-            dt = model(imgs)
-            loss, batch_loss_d, epoch_loss_d = calc_criterion(criterion, gt, dt, epoch_loss_d)
+        if config.AMP_OPT_LEVEL != "O0" and 'cuda' in device:
+            imgs = imgs.type(torch.float16)
+            gt['depth'] = gt['depth'].type(torch.float16)
+            gt['ratio'] = gt['ratio'].type(torch.float16)
+        dt = model(imgs)
+        loss, batch_loss_d, epoch_loss_d = calc_criterion(criterion, gt, dt, epoch_loss_d)
         if config.LOCAL_RANK == 0 and config.SHOW_BAR:
             bar.set_postfix(batch_loss_d)
 
         optimizer.zero_grad()
-        if amp_enabled:
-            scaler.scale(loss).backward()
-            scaler.step(optimizer)
-            scaler.update()
+        if config.AMP_OPT_LEVEL != "O0" and 'cuda' in device:
+            with amp.scale_loss(loss, optimizer) as scaled_loss:
+                scaled_loss.backward()
         else:
             loss.backward()
-            optimizer.step()
+        optimizer.step()
 
         global_step = start_i + i * config.WORLD_SIZE + config.LOCAL_RANK
         for key, val in batch_loss_d.items():

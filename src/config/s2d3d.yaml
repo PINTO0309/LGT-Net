@@ -12,7 +12,7 @@ MODEL:
     'output_name': 'LGT'
   } ]
 TRAIN:
-  DEVICE: 'cuda:0'
+  DEVICE: 'cuda:2'
   SCRATCH: False
   DETERMINISTIC: True
   CRITERION:

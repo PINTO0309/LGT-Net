@@ -1,4 +1,4 @@
-opencv-python-headless
+opencv-python
 PyQt5
 PyOpenGL
 pyglm==1.99.0

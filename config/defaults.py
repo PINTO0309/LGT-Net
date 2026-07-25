@@ -4,7 +4,6 @@
 """
 import os
 import logging
-import sys
 from yacs.config import CfgNode as CN
 
 _C = CN()
@@ -263,23 +262,13 @@ def get_config(args=None):
     config.CKPT.RESULT_DIR = os.path.join(config.CKPT.DIR, 'results', config.MODE)
     config.LOGGER.DIR = os.path.join(config.CKPT.DIR, "logs")
 
-    core_number = None
-    if sys.platform == 'linux':
-        try:
-            core_number = int(
-                os.popen("grep 'physical id' /proc/cpuinfo | sort | uniq | wc -l").read().strip()
-            )
-        except (ValueError, OSError):
-            core_number = None
-    if not core_number:
-        core_number = os.cpu_count()
+    core_number = os.popen("grep 'physical id' /proc/cpuinfo | sort | uniq | wc -l").read()
 
     try:
-        if core_number:
-            config.DATA.NUM_WORKERS = int(core_number) * 2
+        config.DATA.NUM_WORKERS = int(core_number) * 2
         print(f"System core number: {config.DATA.NUM_WORKERS}")
-    except (TypeError, ValueError):
-        print(f"Can't get system core number, will use config: {config.DATA.NUM_WORKERS}")
+    except ValueError:
+        print(f"Can't get system core number, will use config: { config.DATA.NUM_WORKERS}")
     config.freeze()
     return config
 
